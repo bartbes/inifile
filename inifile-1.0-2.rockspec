@@ -1,9 +1,10 @@
 package = "inifile"
-version = "1.0-1"
+version = "1.0-2"
 
 source = {
-	url = "git://github.com/bartbes/love-misc-libs.git",
-	dir = "love-misc-libs/inifile",
+	url = "git://github.com/bartbes/inifile.git",
+	dir = "inifile",
+	tag = "v1.0",
 }
 
 description = {
