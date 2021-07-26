@@ -9,15 +9,16 @@ jobs:
       steps:
         - uses: actions/checkout@master
 
-        - uses: leafo/gh-actions-lua@v5
+        - uses: leafo/gh-actions-lua@v8.0.0
           with:
             luaVersion: "5.1"
 
-        - uses: leafo/gh-actions-luarocks@v2
+        - uses: leafo/gh-actions-luarocks@v4.0.0
 
         - name: build 
           run: |
             luarocks make inifile-dev-1.rockspec
+            luarocks install busted
 
         - name: test
           run: |
