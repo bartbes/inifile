@@ -90,7 +90,7 @@ function inifile.parse(name, backend)
 		if tonumber(value) then value = tonumber(value) end
 		if value == "true" then value = true end
 		if value == "false" then value = false end
-		if key and value ~= nil then
+		if key and value ~= nil and section ~= nil then
 			t[section][key] = value
 			table.insert(cursectionorder, key)
 			validLine = true
