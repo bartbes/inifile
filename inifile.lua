@@ -140,11 +140,21 @@ function inifile.save(name, t, backend)
 		table.insert(contents, ("%s=%s"):format(key, tostring(value)))
 	end
 
+	local function tableLike(value)
+		local function index()
+			return value[1]
+		end
+
+		return pcall(index) and pcall(next, value)
+	end
+
 	local function writesection(section, order)
 		local s = t[section]
 		-- Discard if it doesn't exist (anymore)
 		if not s then return end
 		table.insert(contents, ("[%s]"):format(section))
+
+		assert(tableLike(s), ("Invalid section %s: not table-like"):format(section))
 
 		-- Write our comments out again, sadly we have only achieved
 		-- section-accuracy so far
