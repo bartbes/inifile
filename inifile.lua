@@ -59,8 +59,12 @@ function inifile.parse(name, backend)
 	local comments = {}
 	local sectionorder = {}
 	local cursectionorder
+	local lineNumber = 0
+	local errors = {}
 
 	for line in backends[backend].lines(name) do
+		lineNumber = lineNumber + 1
+		local validLine = false
 
 		-- Section headers
 		local s = line:match("^%[([^%]]+)%]$")
@@ -69,6 +73,7 @@ function inifile.parse(name, backend)
 			t[section] = t[section] or {}
 			cursectionorder = {name = section}
 			table.insert(sectionorder, cursectionorder)
+			validLine = true
 		end
 
 		-- Comments
@@ -77,6 +82,7 @@ function inifile.parse(name, backend)
 			local commentsection = section or comments
 			comments[commentsection] = comments[commentsection] or {}
 			table.insert(comments[commentsection], s)
+			validLine = true
 		end
 
 		-- Key-value pairs
@@ -87,6 +93,11 @@ function inifile.parse(name, backend)
 		if key and value ~= nil then
 			t[section][key] = value
 			table.insert(cursectionorder, key)
+			validLine = true
+		end
+
+		if not validLine then
+			table.insert(errors, ("Line %d: Invalid data found '%s'"):format(lineNumber, line))
 		end
 	end
 
@@ -96,7 +107,7 @@ function inifile.parse(name, backend)
 			comments = comments,
 			sectionorder = sectionorder,
 		}
-	})
+	}), errors
 end
 
 function inifile.save(name, t, backend)
