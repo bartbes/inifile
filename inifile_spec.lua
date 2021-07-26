@@ -116,7 +116,53 @@ Other=data
 	end)
 end)
 
+describe("Error handling", function()
+	it("reports data is not in a section", function()
+		local _, errors = parse[==[
+Some=key
+
+[Section]
+Some=data
+]==]
+
+		assert.are.same(1, #errors)
+		assert.matches("^Line 1", errors[1])
+		assert.matches("Some=key", errors[1])
+	end)
+
+	it("reports invalid section headers", function()
+		local _, errors = parse[==[
+[Section] x
+]==]
+
+		assert.are.same(1, #errors)
+		assert.matches("^Line 1", errors[1])
+		assert.matches("%[Section%] x", errors[1])
+	end)
+
+	it("reports invalid data lines", function()
+		local _, errors = parse[==[
+[Section]
+Some data
+]==]
+
+		assert.are.same(1, #errors)
+		assert.matches("^Line 2", errors[1])
+		assert.matches("Some data", errors[1])
+	end)
+end)
+
 describe("Saving", function()
+	it("reports invalid sections", function()
+		assert.error_matches(
+			function()
+				save{
+					Test = "not a table"
+				}
+			end,
+			"Invalid section")
+	end)
+
 	it("writes all data types", function()
 		local toStringable = setmetatable({}, {
 			__tostring = function()
