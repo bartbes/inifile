@@ -1,10 +1,11 @@
 local inifile = {
-	_VERSION = "inifile 1.0",
+	_VERSION = "inifile 1.1",
 	_DESCRIPTION = "Inifile is a simple, complete ini parser for lua",
 	_URL = "http://docs.bartbes.com/inifile",
 	_LICENSE = [[
 		Copyright 2011-2015 Bart van Strien. All rights reserved.
-
+    Copyright 2021 Sosie von sos-productions.com
+    
 		Redistribution and use in source and binary forms, with or without modification, are
 		permitted provided that the following conditions are met:
 
@@ -36,7 +37,10 @@ local defaultBackend = "io"
 local backends = {
 	io = {
 		lines = function(name) return assert(io.open(name)):lines() end,
-		write = function(name, contents) assert(io.open(name, "w")):write(contents) end,
+		write = function(name, contents) local f=io.open(name, "w") or error(("Can't open file '%s' for writing"):format(name))
+    f:write(contents) 
+    f:close()
+    end,
 	},
 	memory = {
 		lines = function(text) return text:gmatch("([^\r\n]+)\r?\n") end,
