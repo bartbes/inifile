@@ -4,7 +4,7 @@ Inifile is a simple, complete ini parser for lua
 version 1.1 
 ------------
 
--solves assert not closing stream gor write : this is a loophope of lambda functions imho 
+-solves assert not closing stream for write : this is a loophope of lambda functions imho 
 
 -bring mpv config file hook compatibility   : handles special ini files with no sections
 
