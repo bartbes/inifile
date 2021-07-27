@@ -65,6 +65,13 @@ function inifile.parse(name, backend)
 	local cursectionorder
 	local lineNumber = 0
 	local errors = {}
+  
+  if(mpv_config_file_compatibilty_hook) then
+      section = "_nosection_"
+      t[section] = t[section] or {}
+      cursectionorder = {name = section}
+      table.insert(sectionorder, cursectionorder)
+  end
 
 	for line in backends[backend].lines(name) do
 		lineNumber = lineNumber + 1
@@ -94,10 +101,16 @@ function inifile.parse(name, backend)
 		if tonumber(value) then value = tonumber(value) end
 		if value == "true" then value = true end
 		if value == "false" then value = false end
-		if key and value ~= nil and section ~= nil then
-			t[section][key] = value
-			table.insert(cursectionorder, key)
-			validLine = true
+		if key and value ~= nil then
+      if(section ~= nil ) then
+        t[section][key] = value
+        table.insert(cursectionorder, key)
+        validLine = true
+      else
+        if mpv_config_file_compatibilty_hook then
+          validLine = true
+        end
+      end
 		end
 
 		if not validLine then
@@ -156,7 +169,12 @@ function inifile.save(name, t, backend)
 		local s = t[section]
 		-- Discard if it doesn't exist (anymore)
 		if not s then return end
-		table.insert(contents, ("[%s]"):format(section))
+    
+    if section == "_nosection_" then
+			-- skip section header
+		else
+			table.insert(contents, ("[%s]"):format(section))
+		end
 
 		assert(tableLike(s), ("Invalid section %s: not table-like"):format(section))
 
@@ -204,4 +222,90 @@ function inifile.save(name, t, backend)
 	return backends[backend].write(name, table.concat(contents, "\n"))
 end
 
-return inifile
+
+if(mp == nil) then
+  
+  --Reproduces mpv behavior as a testbench
+  --see discussion at https://github.com/bartbes/inifile/issues/1
+  
+  mpv_config_file_compatibilty_hook= true
+  
+  --Two helpers
+  
+  function inifile.setkey(data, key, value, section)
+    if(section == nil) then
+      section="_nosection_"
+    end
+    data[section][key]=value
+  end
+
+  function inifile.getkey(data, key, section)
+    if(section == nil) then
+      section="_nosection_"
+    end
+    return data[section][key]
+  end
+  
+  --optional for debug
+  local inspect = require('inspect')
+  
+  if(inspect == nil) then
+    error("inspect missing , to install it use luarocks ie sudo luarocks install inspect")
+  end
+  
+  local PATH = require "path"
+  if(PATH == nil) then
+    error("lua-path missing , to install it use luarocks ie sudo luarocks install lua-path")
+  end
+  
+  mp= {}
+
+  function mp.getconfile(identifier)
+    --get absolute path og the config file matching identifier
+    local conf_file="~/.config/mpv/script-opts/"..identifier..".conf"
+    return PATH.user_home()..conf_file:gsub("~", "")
+  end
+
+  function mp.set_option_value(name,value, identifier, section)
+    local conf_file=mp.getconfile(identifier)
+    --file_exists(conf_file)
+    local f=io.open(conf_file,"r")
+    if f ~= nil then
+           io.close(f)
+        
+           conf_tabledata=inifile.parse(conf_file)
+           inifile.setkey(conf_tabledata, name, value, section)
+           inifile.save(conf_file,conf_tabledata)
+           --print('NEW TABLE;' ..inspect(conf_tabledata))
+    else
+      --We will assume we save/read  directly from --script-opts=name=value 
+      backends['io'].write(conf_file, name.."="..value)
+    end
+  end
+
+  function mp.get_option_value(name, identifier, section)
+       conf_file=mp.getconfile(identifier)
+       conf_tabledata=inifile.parse(conf_file)
+       return inifile.getkey(conf_tabledata, name, section)
+  end
+
+
+  local identifier="version"
+
+  conf_file=mp.getconfile(identifier)
+  print(conf_file)
+  os.remove(conf_file)
+  name='key'
+  value='defaultvalue'
+  mp.set_option_value(name,value, identifier)
+  value ='configvalue'
+  mp.set_option_value(name,value, identifier)
+  print(mp.get_option_value(name, identifier))
+
+else
+
+  return inifile
+
+end
+
+
