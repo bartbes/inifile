@@ -1,5 +1,5 @@
 local inifile = {
-	_VERSION = "inifile 1.1",
+	_VERSION = "inifile 1.2",
 	_DESCRIPTION = "Inifile is a simple, complete ini parser for lua",
 	_URL = "http://docs.bartbes.com/inifile",
 	_LICENSE = [[
@@ -56,6 +56,8 @@ if love then
 	defaultBackend = "love"
 end
 
+inifile.mpv_config_file_compatibilty_hook=false
+
 function inifile.parse(name, backend)
 	backend = backend or defaultBackend
 	local t = {}
@@ -66,7 +68,7 @@ function inifile.parse(name, backend)
 	local lineNumber = 0
 	local errors = {}
   
-  if(mpv_config_file_compatibilty_hook) then
+  if(inifile.mpv_config_file_compatibilty_hook) then
       section = "_nosection_"
       t[section] = t[section] or {}
       cursectionorder = {name = section}
@@ -176,7 +178,9 @@ function inifile.save(name, t, backend)
 			table.insert(contents, ("[%s]"):format(section))
 		end
 
-		assert(tableLike(s), ("Invalid section %s: not table-like"):format(section))
+    if not inifile.mpv_config_file_compatibilty_hook then
+      assert(tableLike(s), ("Invalid section %s: not table-like howvever if your file has in fact no section, try 'mpv_config_file_compatibilty_hook= true'"):format(section))
+    end
 
 		-- Write our comments out again, sadly we have only achieved
 		-- section-accuracy so far
@@ -223,12 +227,13 @@ function inifile.save(name, t, backend)
 end
 
 
-if(mp == nil) then
+-- script called directly
+if(debug.getinfo(1, "n").name == nil) then
   
   --Reproduces mpv behavior as a testbench
   --see discussion at https://github.com/bartbes/inifile/issues/1
   
-  mpv_config_file_compatibilty_hook= true
+  inifile.mpv_config_file_compatibilty_hook= true
   
   --Two helpers
   
@@ -258,8 +263,10 @@ if(mp == nil) then
     error("lua-path missing , to install it use luarocks ie sudo luarocks install lua-path")
   end
   
-  mp= {}
-
+  if mp == nil then
+    mp= {}
+  end
+  
   function mp.getconfile(identifier)
     --get absolute path og the config file matching identifier
     local conf_file="~/.config/mpv/script-opts/"..identifier..".conf"
@@ -303,9 +310,8 @@ if(mp == nil) then
   print(mp.get_option_value(name, identifier))
 
 else
-
+  --Module
   return inifile
-
 end
 
 
