@@ -1,10 +1,10 @@
 package = "inifile"
-version = "1.0-2"
+version = "1.1-1"
 
 source = {
 	url = "git://github.com/bartbes/inifile.git",
 	dir = "inifile",
-	tag = "v1.0",
+	tag = "v1.1",
 }
 
 description = {
