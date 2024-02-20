@@ -1,7 +1,7 @@
 local inifile = {
 	_VERSION = "inifile 1.0",
 	_DESCRIPTION = "Inifile is a simple, complete ini parser for lua",
-	_URL = "http://docs.bartbes.com/inifile",
+	_URL = "https://github.com/bartbes/inifile",
 	_LICENSE = [[
 		Copyright 2011-2015 Bart van Strien. All rights reserved.
 

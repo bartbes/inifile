@@ -13,7 +13,7 @@ description = {
 		as much information as possible, like the order of the file and the stored
 		comments. It is also out-of-the-box compatible with LÖVE.
 	]],
-	homepage = "http://docs.bartbes.com/inifile",
+	homepage = "https://github.com/bartbes/inifile",
 	license = "Simplified BSD license",
 }
 
